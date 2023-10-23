@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,23 +13,16 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    try {
-      const password = await hashPassword(createUserDto.password);
-      const data = { ...createUserDto, password };
-      const existedUser = await this.usersRepository.findOneBy({
-        email: data.email,
-      });
+    const password = await hashPassword(createUserDto.password);
+    const data = { ...createUserDto, password };
+    const existedUser = await this.usersRepository.findOneBy({
+      email: data.email,
+    });
 
-      if (existedUser) {
-        return existedUser;
-      }
-      return await this.usersRepository.create(data).save();
-    } catch (error) {
-      throw new HttpException(
-        'smmething went wrong',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+    if (existedUser) {
+      return existedUser;
     }
+    return await this.usersRepository.create(data).save();
   }
 
   findAll() {
@@ -38,18 +31,12 @@ export class UsersService {
   }
 
   async findOne(id: number) {
-    const user = await this.usersRepository.findOneBy({ id });
-    if (!user) {
-      throw new HttpException('not found user', HttpStatus.FORBIDDEN);
-    }
+    const user = await this.usersRepository.findOneByOrFail({ id });
     return user;
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const existedUser = await this.usersRepository.findOneBy({ id });
-    if (!existedUser) {
-      throw new HttpException('not found user', HttpStatus.FORBIDDEN);
-    }
+    const existedUser = await this.usersRepository.findOneByOrFail({ id });
     if (updateUserDto.password) {
       const password = await hashPassword(updateUserDto.password);
       updateUserDto.password = password;
@@ -63,10 +50,7 @@ export class UsersService {
   }
 
   async remove(id: number) {
-    const existedUser = await this.usersRepository.findOneBy({ id });
-    if (!existedUser) {
-      throw new HttpException('not found user', HttpStatus.FORBIDDEN);
-    }
+    const existedUser = await this.usersRepository.findOneByOrFail({ id });
     await this.usersRepository.softDelete({ id });
     return {
       userId: id,
