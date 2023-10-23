@@ -4,7 +4,9 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
+  UnauthorizedException,
 } from '@nestjs/common';
+import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import {
   CannotCreateEntityIdMapError,
@@ -24,6 +26,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     switch (exception.constructor) {
       case HttpException:
         status = (exception as HttpException).getStatus();
+        message = (exception as HttpException).message;
         break;
       case QueryFailedError:
         status = HttpStatus.UNPROCESSABLE_ENTITY;
@@ -36,6 +39,18 @@ export class HttpExceptionFilter implements ExceptionFilter {
       case CannotCreateEntityIdMapError:
         status = HttpStatus.UNPROCESSABLE_ENTITY;
         message = (exception as CannotCreateEntityIdMapError).message;
+        break;
+      case UnauthorizedException:
+        status = HttpStatus.UNAUTHORIZED;
+        message = (exception as CannotCreateEntityIdMapError).message;
+        break;
+      case JsonWebTokenError:
+        status = HttpStatus.UNAUTHORIZED;
+        message = (exception as JsonWebTokenError).message;
+        break;
+      case TokenExpiredError:
+        status = HttpStatus.UNAUTHORIZED;
+        message = (exception as TokenExpiredError).message;
         break;
       default:
         status = HttpStatus.INTERNAL_SERVER_ERROR;

@@ -30,8 +30,13 @@ export class UsersService {
     return users;
   }
 
-  async findOne(id: number) {
+  async findOneById(id: number) {
     const user = await this.usersRepository.findOneByOrFail({ id });
+    return user;
+  }
+
+  async findOneByEmail(email: string) {
+    const user = await this.usersRepository.findOneByOrFail({ email });
     return user;
   }
 
